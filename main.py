@@ -243,9 +243,11 @@ class GameScreen(Screen):
         self.mines_left = cfg["mines"]
         self.time_elapsed = 0
         self.finished = False
-        self._last_tap = None
+        self.flag_mode = False
 
-        self.ids.status_label.text = "Тап — открыть, двойной тап — флажок"
+        # Сбрасываем переключатель в положение "Открытие"
+        self.ids.flag_toggle.state = 'normal'
+        
         self._rebuild_grid()
         self._update_counters()
 
@@ -253,7 +255,7 @@ class GameScreen(Screen):
         if hasattr(self, "_timer") and self._timer:
             self._timer.cancel()
         self._timer = Clock.schedule_interval(self._tick, 1)
-
+        
     def _tick(self, _dt):
         if self.finished:
             return
