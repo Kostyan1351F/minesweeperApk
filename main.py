@@ -239,9 +239,8 @@ class GameScreen(Screen):
         self.finished = False
         self.flag_mode = False
 
-        # Сброс переключателя
+        # Сброс кнопки режима
         if 'flag_toggle' in self.ids:
-            self.ids.flag_toggle.state = 'normal'
             self.ids.flag_toggle.text = "Режим: ОТКРЫТИЕ КЛЕТОК"
             self.ids.flag_toggle.background_color = (0.05, 0.30, 0.30, 0.5)
 
@@ -277,21 +276,21 @@ class GameScreen(Screen):
                     background_down='',
                     background_color=(0.6, 0.6, 0.6, 1),
                 )
-                # Используем on_release для обработки клика
+                # on_release — самый надежный клик для Android
                 btn.bind(on_release=lambda inst, rr=r, cc=c: self.on_cell_click(rr, cc))
                 grid.add_widget(btn)
 
-    def on_flag_toggle_state(self, state):
+    def toggle_flag_mode(self):
+        """Переключение режима (вызывается по нажатию на кнопку)"""
         if self.finished:
-            self.ids.flag_toggle.state = 'normal'
             return
 
-        if state == 'down':
-            self.flag_mode = True
+        self.flag_mode = not self.flag_mode
+
+        if self.flag_mode:
             self.ids.flag_toggle.text = "F РЕЖИМ ФЛАЖКОВ (ВКЛ)"
             self.ids.flag_toggle.background_color = (0.8, 0.3, 0.1, 0.7)
         else:
-            self.flag_mode = False
             self.ids.flag_toggle.text = "Режим: ОТКРЫТИЕ КЛЕТОК"
             self.ids.flag_toggle.background_color = (0.05, 0.30, 0.30, 0.5)
 
