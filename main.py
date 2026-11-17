@@ -284,7 +284,7 @@ class GameScreen(Screen):
                 )
                 grid.add_widget(btn)
 
-       def on_cell_touch_down(self, widget, touch, r, c):
+    def on_cell_touch_down(self, widget, touch, r, c):
         """Обработка нажатия (ЛКМ или тап на телефоне)"""
         if self.finished:
             return False
