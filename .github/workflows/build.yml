@@ -33,7 +33,10 @@ jobs:
       run: |
         pip install --upgrade buildozer
         pip install "Cython<3.0"
-
+        
+    - name: Clean Buildozer Cache
+      run: buildozer android clean
+      
     - name: Build with Buildozer
       run: |
         buildozer -v android debug
