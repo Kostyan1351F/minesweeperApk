@@ -243,6 +243,7 @@ class GameScreen(Screen):
         self.mines_left = cfg["mines"]
         self.time_elapsed = 0
         self.finished = False
+        self._last_tap = None
 
         self.ids.status_label.text = "ЛКМ — открыть, ПКМ — флажок"
         self._rebuild_grid()
@@ -285,43 +286,53 @@ class GameScreen(Screen):
                 grid.add_widget(btn)
 
     def on_cell_touch_down(self, widget, touch, r, c):
-        """Обработка нажатия (ЛКМ или тап на телефоне)"""
         if self.finished:
             return False
         if not widget.collide_point(*touch.pos):
             return False
 
-        # Если это правая кнопка мыши (на ПК) - ставим флажок сразу
+        # Для ПК (Правая кнопка мыши) - ставим флажок сразу
         if touch.button == "right":
             self.on_cell_right(r, c)
             return True
-
-        # Для мобильных: запускаем таймер на 0.4 секунды. 
-        # Если палец не отпустили - сработает флажок.
-        touch.ud['long_press_event'] = Clock.schedule_once(
-            lambda dt: self._long_press_action(widget, touch, r, c), 0.4
-        )
-        return True
+            
+        current_time = Clock.get_time()
+        if hasattr(self, '_last_tap') and self._last_tap is not None:
+            last_time, last_r, last_c = self._last_tap
+            if last_r == r and last_c == c and (current_time - last_time) < 0.4:
+                # Это двойной тап! Ставим флажок
+                self.on_cell_right(r, c)
+                self._last_tap = None # Сбрасываем, чтобы следующий тап считался одиночным
+                return True
+        
+        self._last_tap = (current_time, r, c)
+        
+        return False
 
     def on_cell_touch_up(self, widget, touch, r, c):
-        """Обработка отпускания пальца/мыши"""
         if self.finished:
             return False
         if not widget.collide_point(*touch.pos):
             return False
 
-        # Если это была правая кнопка - ничего не делаем (флажок уже поставлен)
+        # Если это была правая кнопка - ничего не делаем
         if touch.button == "right":
             return True
 
-        # Отменяем таймер долгого нажатия, так как палец отпустили раньше
-        if 'long_press_event' in touch.ud:
-            touch.ud['long_press_event'].cancel()
-            del touch.ud['long_press_event']
-            # Если это был короткий тап - открываем клетку
-            self.on_cell_left(r, c)
-            
+        
+        Clock.schedule_once(lambda dt: self._handle_single_tap(r, c), 0.3)
         return True
+
+    def _handle_single_tap(self, r, c):
+        
+        if hasattr(self, '_last_tap') and self._last_tap is not None:
+            _, last_r, last_c = self._last_tap
+            if last_r == r and last_c == c:
+                self.on_cell_left(r, c)
+                self._last_tap = None
+        else:
+            
+            pass
 
     def _long_press_action(self, widget, touch, r, c):
         """Действие, если палец задержался на клетке"""
