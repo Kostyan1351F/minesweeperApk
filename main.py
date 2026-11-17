@@ -245,7 +245,7 @@ class GameScreen(Screen):
         self.finished = False
         self._last_tap = None
 
-        self.ids.status_label.text = "ЛКМ — открыть, ПКМ — флажок"
+        self.ids.status_label.text = "Тап — открыть, двойной тап — флажок"
         self._rebuild_grid()
         self._update_counters()
 
