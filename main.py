@@ -11,12 +11,10 @@ from kivy.clock import Clock
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.uix.button import Button
 from kivy.uix.label import Label
-from kivy.properties import StringProperty, NumericProperty, BooleanProperty
+from kivy.properties import StringProperty, NumericProperty
 
 import sys
-import os
 import kivy.resources
-
 
 if getattr(sys, 'frozen', False):
     kivy.resources.resource_add_path(sys._MEIPASS)
@@ -40,7 +38,7 @@ def init_db():
             played_at TEXT NOT NULL,
             difficulty TEXT NOT NULL,
             seconds INTEGER NOT NULL,
-            result TEXT NOT NULL       -- 'win' или 'lose'
+            result TEXT NOT NULL
         )
     """)
     conn.commit()
@@ -167,9 +165,6 @@ class Board:
             return
         cell.flagged = not cell.flagged
 
-    def revealed_count(self):
-        return sum(1 for row in self.grid for cell in row if cell.revealed)
-
     def flags_count(self):
         return sum(1 for row in self.grid for cell in row if cell.flagged)
 
@@ -232,7 +227,6 @@ class MenuScreen(Screen):
 
 class GameScreen(Screen):
     difficulty = StringProperty("Новичок")
-    status_text = StringProperty("")
     mines_left = NumericProperty(0)
     time_elapsed = NumericProperty(0)
 
@@ -245,15 +239,15 @@ class GameScreen(Screen):
         self.finished = False
         self.flag_mode = False
 
-        # Сбрасываем кнопку режима
+        # Сброс переключателя
         if 'flag_toggle' in self.ids:
+            self.ids.flag_toggle.state = 'normal'
             self.ids.flag_toggle.text = "Режим: ОТКРЫТИЕ КЛЕТОК"
             self.ids.flag_toggle.background_color = (0.05, 0.30, 0.30, 0.5)
-        
+
         self._rebuild_grid()
         self._update_counters()
 
-        # таймер
         if hasattr(self, "_timer") and self._timer:
             self._timer.cancel()
         self._timer = Clock.schedule_interval(self._tick, 1)
@@ -283,21 +277,23 @@ class GameScreen(Screen):
                     background_down='',
                     background_color=(0.6, 0.6, 0.6, 1),
                 )
-                # Надежный клик через on_press
-                btn.bind(on_press=lambda inst, rr=r, cc=c: self.on_cell_click(rr, cc))
+                # Используем on_release для обработки клика
+                btn.bind(on_release=lambda inst, rr=r, cc=c: self.on_cell_click(rr, cc))
                 grid.add_widget(btn)
 
-    def toggle_flag_mode(self):
-        """Переключение режима между открытием и флажком"""
+    def on_flag_toggle_state(self, state):
         if self.finished:
+            self.ids.flag_toggle.state = 'normal'
             return
-        self.flag_mode = not self.flag_mode
-        if self.flag_mode:
+
+        if state == 'down':
+            self.flag_mode = True
             self.ids.flag_toggle.text = "F РЕЖИМ ФЛАЖКОВ (ВКЛ)"
-            self.ids.flag_toggle.background_color = (0.8, 0.3, 0.1, 0.7) # Красноватый
+            self.ids.flag_toggle.background_color = (0.8, 0.3, 0.1, 0.7)
         else:
+            self.flag_mode = False
             self.ids.flag_toggle.text = "Режим: ОТКРЫТИЕ КЛЕТОК"
-            self.ids.flag_toggle.background_color = (0.05, 0.30, 0.30, 0.5) # Зеленоватый
+            self.ids.flag_toggle.background_color = (0.05, 0.30, 0.30, 0.5)
 
     def on_cell_click(self, r, c):
         if self.finished:
@@ -362,7 +358,6 @@ class GameScreen(Screen):
         self.finished = True
         if hasattr(self, "_timer") and self._timer:
             self._timer.cancel()
-        # показываем все мины
         for rr in range(self.board.rows):
             for cc in range(self.board.cols):
                 if self.board.grid[rr][cc].mine:
@@ -390,15 +385,19 @@ class GameScreen(Screen):
             self._timer.cancel()
         self.manager.current = "Menu"
         self.manager.transition.direction = "right"
-        
+
+
 class WinMan(ScreenManager):
     pass
+
 
 class MenuButton(Button):
     pass
 
+
 class GameControlButton(Button):
     pass
+
 
 class MinesweeperApp(App):
     def build(self):
