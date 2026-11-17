@@ -105,7 +105,7 @@
                 text: "Время: 0 сек"
                 font_size: '20sp'
 
-        Button:
+        ToggleButton:
             id: flag_toggle
             text: "Режим: ОТКРЫТИЕ КЛЕТОК"
             font_size: '16sp'
@@ -113,7 +113,7 @@
             height: "40dp"
             background_normal: ''
             background_color: 0.05, 0.30, 0.30, 0.5
-            on_press: root.toggle_flag_mode()
+            on_state: root.on_flag_toggle_state(self.state)
 
         GridLayout:
             id: board_grid
