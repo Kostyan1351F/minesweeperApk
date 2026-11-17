@@ -7,7 +7,7 @@ title = Minesweeper
 
 version = 1.0.0
 
-source.dir = calc
+source.dir = .
 source.include_exts = py,png,jpg,kv,atlas
 
 requirements = openssl, python3, kivy, sqlite3
