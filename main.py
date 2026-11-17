@@ -245,10 +245,10 @@ class GameScreen(Screen):
         self.finished = False
         self.flag_mode = False
 
-        # Сбрасываем переключатель
+        # Сбрасываем кнопку режима
         if 'flag_toggle' in self.ids:
-            self.ids.flag_toggle.state = 'normal'
-            self.ids.flag_toggle.text = "Режим: Открытие клеток"
+            self.ids.flag_toggle.text = "Режим: ОТКРЫТИЕ КЛЕТОК"
+            self.ids.flag_toggle.background_color = (0.05, 0.30, 0.30, 0.5)
         
         self._rebuild_grid()
         self._update_counters()
@@ -283,29 +283,30 @@ class GameScreen(Screen):
                     background_down='',
                     background_color=(0.6, 0.6, 0.6, 1),
                 )
-                # Только одно событие нажатия
+                # Надежный клик через on_press
                 btn.bind(on_press=lambda inst, rr=r, cc=c: self.on_cell_click(rr, cc))
                 grid.add_widget(btn)
 
+    def toggle_flag_mode(self):
+        """Переключение режима между открытием и флажком"""
+        if self.finished:
+            return
+        self.flag_mode = not self.flag_mode
+        if self.flag_mode:
+            self.ids.flag_toggle.text = "F РЕЖИМ ФЛАЖКОВ (ВКЛ)"
+            self.ids.flag_toggle.background_color = (0.8, 0.3, 0.1, 0.7) # Красноватый
+        else:
+            self.ids.flag_toggle.text = "Режим: ОТКРЫТИЕ КЛЕТОК"
+            self.ids.flag_toggle.background_color = (0.05, 0.30, 0.30, 0.5) # Зеленоватый
+
     def on_cell_click(self, r, c):
-        """Единый и надежный обработчик клика"""
         if self.finished:
             return
 
-        # В Kivy на Android 'right' не существует, поэтому проверяем только flag_mode
         if self.flag_mode:
             self.on_cell_right(r, c)
         else:
             self.on_cell_left(r, c)
-
-    def on_flag_toggle(self, state):
-        """Срабатывает при переключении ToggleButton"""
-        if state == 'down':
-            self.flag_mode = True
-            self.ids.flag_toggle.text = "🚩 РЕЖИМ ФЛАЖКОВ (ВКЛ)"
-        else:
-            self.flag_mode = False
-            self.ids.flag_toggle.text = "Режим: Открытие клеток"
 
     def on_cell_left(self, r, c):
         if self.finished:
@@ -330,7 +331,6 @@ class GameScreen(Screen):
     def _refresh_cells(self):
         grid = self.ids.board_grid
         idx = 0
-        # Проходим по сетке в правильном порядке
         for r in range(self.board.rows):
             for c in range(self.board.cols):
                 cell = self.board.grid[r][c]
@@ -370,6 +370,7 @@ class GameScreen(Screen):
         self._refresh_cells()
         if 'flag_toggle' in self.ids:
             self.ids.flag_toggle.text = "Проигрыш! Нажмите 'Новая партия'"
+            self.ids.flag_toggle.background_color = (0.5, 0.0, 0.0, 0.7)
         save_record(self.difficulty, self.time_elapsed, "lose")
 
     def _win(self):
@@ -378,6 +379,7 @@ class GameScreen(Screen):
             self._timer.cancel()
         if 'flag_toggle' in self.ids:
             self.ids.flag_toggle.text = "Победа! Время: {} сек".format(self.time_elapsed)
+            self.ids.flag_toggle.background_color = (0.0, 0.5, 0.0, 0.7)
         save_record(self.difficulty, self.time_elapsed, "win")
 
     def restart(self):
@@ -388,8 +390,7 @@ class GameScreen(Screen):
             self._timer.cancel()
         self.manager.current = "Menu"
         self.manager.transition.direction = "right"
-
-
+        
 class WinMan(ScreenManager):
     pass
 
