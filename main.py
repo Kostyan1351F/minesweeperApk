@@ -245,8 +245,10 @@ class GameScreen(Screen):
         self.finished = False
         self.flag_mode = False
 
-        # Сбрасываем переключатель в положение "Открытие"
-        self.ids.flag_toggle.state = 'normal'
+        # Сбрасываем переключатель
+        if 'flag_toggle' in self.ids:
+            self.ids.flag_toggle.state = 'normal'
+            self.ids.flag_toggle.text = "Режим: Открытие клеток"
         
         self._rebuild_grid()
         self._update_counters()
@@ -255,7 +257,7 @@ class GameScreen(Screen):
         if hasattr(self, "_timer") and self._timer:
             self._timer.cancel()
         self._timer = Clock.schedule_interval(self._tick, 1)
-        
+
     def _tick(self, _dt):
         if self.finished:
             return
@@ -281,33 +283,20 @@ class GameScreen(Screen):
                     background_down='',
                     background_color=(0.6, 0.6, 0.6, 1),
                 )
-                btn.bind(
-                    on_touch_down=lambda w, t, rr=r, cc=c: self.on_cell_touch_down(w, t, rr, cc),
-                    on_touch_up=lambda w, t, rr=r, cc=c: self.on_cell_touch_up(w, t, rr, cc)
-                )
+                # Только одно событие нажатия
+                btn.bind(on_press=lambda inst, rr=r, cc=c: self.on_cell_click(rr, cc))
                 grid.add_widget(btn)
 
-    def on_cell_touch(self, widget, touch, r, c):
-        """Единый обработчик нажатий на клетку (для ПК и мобильных)"""
+    def on_cell_click(self, r, c):
+        """Единый и надежный обработчик клика"""
         if self.finished:
-            return False
-        if not widget.collide_point(*touch.pos):
-            return False
+            return
 
-        # На ПК: правая кнопка мыши всегда ставит флажок
-        if touch.button == "right":
+        # В Kivy на Android 'right' не существует, поэтому проверяем только flag_mode
+        if self.flag_mode:
             self.on_cell_right(r, c)
-            return True
-        
-        # На ПК и телефоне: левая кнопка/тап
-        if touch.button in ("left", "scroll", None):
-            if self.flag_mode:
-                self.on_cell_right(r, c)
-            else:
-                self.on_cell_left(r, c)
-            return True
-
-        return False
+        else:
+            self.on_cell_left(r, c)
 
     def on_flag_toggle(self, state):
         """Срабатывает при переключении ToggleButton"""
@@ -318,9 +307,6 @@ class GameScreen(Screen):
             self.flag_mode = False
             self.ids.flag_toggle.text = "Режим: Открытие клеток"
 
-    def _update_counters(self):
-        self.ids.mines_label.text = "Мин: {}".format(self.mines_left)
-        self.ids.time_label.text = "Время: {} сек".format(self.time_elapsed)
     def on_cell_left(self, r, c):
         if self.finished:
             return
@@ -344,10 +330,11 @@ class GameScreen(Screen):
     def _refresh_cells(self):
         grid = self.ids.board_grid
         idx = 0
+        # Проходим по сетке в правильном порядке
         for r in range(self.board.rows):
             for c in range(self.board.cols):
                 cell = self.board.grid[r][c]
-                btn = grid.children[grid.children.__len__() - 1 - idx]
+                btn = grid.children[len(grid.children) - 1 - idx]
                 idx += 1
 
                 btn.disabled = False
@@ -373,20 +360,24 @@ class GameScreen(Screen):
 
     def _lose(self, r, c):
         self.finished = True
-        self._timer.cancel()
+        if hasattr(self, "_timer") and self._timer:
+            self._timer.cancel()
         # показываем все мины
         for rr in range(self.board.rows):
             for cc in range(self.board.cols):
                 if self.board.grid[rr][cc].mine:
                     self.board.grid[rr][cc].revealed = True
         self._refresh_cells()
-        self.ids.flag_toggle.text = "Проигрыш! Нажмите 'Новая партия'"
+        if 'flag_toggle' in self.ids:
+            self.ids.flag_toggle.text = "Проигрыш! Нажмите 'Новая партия'"
         save_record(self.difficulty, self.time_elapsed, "lose")
 
     def _win(self):
         self.finished = True
-        self._timer.cancel()
-        self.ids.flag_toggle.text = "Победа! Время: {} сек".format(self.time_elapsed)
+        if hasattr(self, "_timer") and self._timer:
+            self._timer.cancel()
+        if 'flag_toggle' in self.ids:
+            self.ids.flag_toggle.text = "Победа! Время: {} сек".format(self.time_elapsed)
         save_record(self.difficulty, self.time_elapsed, "win")
 
     def restart(self):
