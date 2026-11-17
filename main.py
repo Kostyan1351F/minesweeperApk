@@ -277,21 +277,60 @@ class GameScreen(Screen):
                     background_normal='',
                     background_down='',
                     background_color=(0.6, 0.6, 0.6, 1),
-                    on_press=lambda inst, rr=r, cc=c: self.on_cell_left(rr, cc),
                 )
-                btn.bind(on_touch_down=lambda w, t, rr=r, cc=c: self.on_cell_touch(w, t, rr, cc))
+                btn.bind(
+                    on_touch_down=lambda w, t, rr=r, cc=c: self.on_cell_touch_down(w, t, rr, cc),
+                    on_touch_up=lambda w, t, rr=r, cc=c: self.on_cell_touch_up(w, t, rr, cc)
+                )
                 grid.add_widget(btn)
 
-    def on_cell_touch(self, widget, touch, r, c):
-        """Обработка ПКМ (флажок)."""
+       def on_cell_touch_down(self, widget, touch, r, c):
+        """Обработка нажатия (ЛКМ или тап на телефоне)"""
         if self.finished:
             return False
         if not widget.collide_point(*touch.pos):
             return False
+
+        # Если это правая кнопка мыши (на ПК) - ставим флажок сразу
         if touch.button == "right":
             self.on_cell_right(r, c)
             return True
-        return False
+
+        # Для мобильных: запускаем таймер на 0.4 секунды. 
+        # Если палец не отпустили - сработает флажок.
+        touch.ud['long_press_event'] = Clock.schedule_once(
+            lambda dt: self._long_press_action(widget, touch, r, c), 0.4
+        )
+        return True
+
+    def on_cell_touch_up(self, widget, touch, r, c):
+        """Обработка отпускания пальца/мыши"""
+        if self.finished:
+            return False
+        if not widget.collide_point(*touch.pos):
+            return False
+
+        # Если это была правая кнопка - ничего не делаем (флажок уже поставлен)
+        if touch.button == "right":
+            return True
+
+        # Отменяем таймер долгого нажатия, так как палец отпустили раньше
+        if 'long_press_event' in touch.ud:
+            touch.ud['long_press_event'].cancel()
+            del touch.ud['long_press_event']
+            # Если это был короткий тап - открываем клетку
+            self.on_cell_left(r, c)
+            
+        return True
+
+    def _long_press_action(self, widget, touch, r, c):
+        """Действие, если палец задержался на клетке"""
+        # Удаляем событие, чтобы при отпускании не открылась клетка
+        if 'long_press_event' in touch.ud:
+            del touch.ud['long_press_event']
+        
+        # Ставим/убираем флажок
+        self.on_cell_right(r, c)
 
     def on_cell_left(self, r, c):
         if self.finished:
