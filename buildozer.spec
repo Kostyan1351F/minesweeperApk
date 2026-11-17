@@ -1,5 +1,5 @@
 [app]
-package.name = calculator
+package.name = minesweeper
 package.domain = org.test
 
 title = Minesweeper
