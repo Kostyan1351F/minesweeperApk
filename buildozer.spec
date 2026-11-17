@@ -2,7 +2,8 @@
 package.name = calculator
 package.domain = org.test
 
-title = Calculator
+title = Minesweeper
+
 
 version = 1.0.0
 
