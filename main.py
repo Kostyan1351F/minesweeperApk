@@ -287,64 +287,40 @@ class GameScreen(Screen):
                 )
                 grid.add_widget(btn)
 
-    def on_cell_touch_down(self, widget, touch, r, c):
+    def on_cell_touch(self, widget, touch, r, c):
+        """Единый обработчик нажатий на клетку (для ПК и мобильных)"""
         if self.finished:
             return False
         if not widget.collide_point(*touch.pos):
             return False
 
-        # Для ПК (Правая кнопка мыши) - ставим флажок сразу
+        # На ПК: правая кнопка мыши всегда ставит флажок
         if touch.button == "right":
             self.on_cell_right(r, c)
             return True
-            
-        current_time = Clock.get_time()
-        if hasattr(self, '_last_tap') and self._last_tap is not None:
-            last_time, last_r, last_c = self._last_tap
-            if last_r == r and last_c == c and (current_time - last_time) < 0.4:
-                # Это двойной тап! Ставим флажок
+        
+        # На ПК и телефоне: левая кнопка/тап
+        if touch.button in ("left", "scroll", None):
+            if self.flag_mode:
                 self.on_cell_right(r, c)
-                self._last_tap = None # Сбрасываем, чтобы следующий тап считался одиночным
-                return True
-        
-        self._last_tap = (current_time, r, c)
-        
-        return False
-
-    def on_cell_touch_up(self, widget, touch, r, c):
-        if self.finished:
-            return False
-        if not widget.collide_point(*touch.pos):
-            return False
-
-        # Если это была правая кнопка - ничего не делаем
-        if touch.button == "right":
+            else:
+                self.on_cell_left(r, c)
             return True
 
-        
-        Clock.schedule_once(lambda dt: self._handle_single_tap(r, c), 0.3)
-        return True
+        return False
 
-    def _handle_single_tap(self, r, c):
-        
-        if hasattr(self, '_last_tap') and self._last_tap is not None:
-            _, last_r, last_c = self._last_tap
-            if last_r == r and last_c == c:
-                self.on_cell_left(r, c)
-                self._last_tap = None
+    def on_flag_toggle(self, state):
+        """Срабатывает при переключении ToggleButton"""
+        if state == 'down':
+            self.flag_mode = True
+            self.ids.flag_toggle.text = "🚩 РЕЖИМ ФЛАЖКОВ (ВКЛ)"
         else:
-            
-            pass
+            self.flag_mode = False
+            self.ids.flag_toggle.text = "Режим: Открытие клеток"
 
-    def _long_press_action(self, widget, touch, r, c):
-        """Действие, если палец задержался на клетке"""
-        # Удаляем событие, чтобы при отпускании не открылась клетка
-        if 'long_press_event' in touch.ud:
-            del touch.ud['long_press_event']
-        
-        # Ставим/убираем флажок
-        self.on_cell_right(r, c)
-
+    def _update_counters(self):
+        self.ids.mines_label.text = "Мин: {}".format(self.mines_left)
+        self.ids.time_label.text = "Время: {} сек".format(self.time_elapsed)
     def on_cell_left(self, r, c):
         if self.finished:
             return
