@@ -380,13 +380,13 @@ class GameScreen(Screen):
                 if self.board.grid[rr][cc].mine:
                     self.board.grid[rr][cc].revealed = True
         self._refresh_cells()
-        self.ids.status_label.text = "Проигрыш!"
+        self.ids.flag_toggle.text = "Проигрыш! Нажмите 'Новая партия'"
         save_record(self.difficulty, self.time_elapsed, "lose")
 
     def _win(self):
         self.finished = True
         self._timer.cancel()
-        self.ids.status_label.text = "Победа! Время: {} сек".format(self.time_elapsed)
+        self.ids.flag_toggle.text = "Победа! Время: {} сек".format(self.time_elapsed)
         save_record(self.difficulty, self.time_elapsed, "win")
 
     def restart(self):
