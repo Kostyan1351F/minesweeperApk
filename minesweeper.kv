@@ -1,0 +1,162 @@
+<MenuScreen>:
+    name: "Menu"
+    BoxLayout:
+        orientation: 'vertical'
+        padding: 20
+        spacing: 10
+        canvas.before:
+            Rectangle:
+                pos: self.pos
+                size: self.size
+                source: 'pics/fon2.png'
+
+        Label:
+            text: "Сапёр"
+            font_size: '34sp'
+            size_hint_y: None
+            height: "50dp"
+
+        Label:
+            text: "Сложность: " + root.difficulty
+            font_size: '20sp'
+            size_hint_y: None
+            height: "30dp"
+
+        BoxLayout:
+            size_hint_y: None
+            height: "50dp"
+            spacing: 10
+            MenuButton:
+                text: "Новичок"
+                on_press: root.set_difficulty("Новичок")
+            MenuButton:
+                text: "Любитель"
+                on_press: root.set_difficulty("Любитель")
+            MenuButton:
+                text: "Профи"
+                on_press: root.set_difficulty("Профи")
+
+        Label:
+            id: best_label
+            text: "Лучшее время"
+            font_size: '16sp'
+            size_hint_y: None
+            height: "110dp"
+            halign: 'center'
+            valign: 'middle'
+            text_size: self.width, None
+
+        MenuButton:
+            text: "Играть"
+            font_size: '26sp'
+            size_hint_y: None
+            height: "60dp"
+            on_press: root.start_game()
+
+        Label:
+            text: "История партий:"
+            font_size: '18sp'
+            size_hint_y: None
+            height: "28dp"
+
+        ScrollView:
+            do_scroll_x: False
+            GridLayout:
+                id: history_list
+                cols: 1
+                size_hint_y: None
+                height: self.minimum_height
+                spacing: 3
+
+        BoxLayout:
+            size_hint_y: None
+            height: "50dp"
+            spacing: 10
+            MenuButton:
+                text: "Очистить историю"
+                on_press: root.clear_history()
+            MenuButton:
+                text: "Выход"
+                on_press: root.exit_app()
+
+
+<GameScreen>:
+    name: "Game"
+    BoxLayout:
+        orientation: 'vertical'
+        padding: 10
+        spacing: 8
+        canvas.before:
+            Rectangle:
+                pos: self.pos
+                size: self.size
+                source: 'pics/fon1.png'
+
+        BoxLayout:
+            size_hint_y: None
+            height: "40dp"
+            spacing: 10
+            Label:
+                id: mines_label
+                text: "Мин: 0"
+                font_size: '20sp'
+            Label:
+                id: time_label
+                text: "Время: 0 сек"
+                font_size: '20sp'
+
+        Label:
+            id: status_label
+            text: "ЛКМ — открыть, ПКМ — флажок"
+            font_size: '18sp'
+            size_hint_y: None
+            height: "30dp"
+
+        GridLayout:
+            id: board_grid
+            cols: 9
+            rows: 9
+            spacing: 2
+            size_hint_y: 1
+
+        BoxLayout:
+            size_hint_y: None
+            height: "50dp"
+            spacing: 10
+            GameControlButton:
+                text: "Новая партия"
+                font_size: '20sp'
+                on_press: root.restart()
+            GameControlButton:
+                text: "В меню"
+                font_size: '20sp'
+                on_press: root.back_to_menu()
+
+
+<WinMan>:
+    MenuScreen:
+    GameScreen:
+
+<MenuButton>:
+    background_normal: ''
+    background_color: 0.05, 0.35, 0.3, 0.5
+    color: 1, 1, 1, 1
+    font_size: '18sp'
+    canvas.after:
+        Color:
+            rgba: 1, 1, 1, 1
+        Line:
+            rectangle: self.x + 4, self.y + 4, self.width - 8, self.height - 8
+            width: 1.2
+
+<GameControlButton>:
+    background_normal: ''
+    background_color: 0.05, 0.30, 0.30, 0.5
+    color: 1, 1, 1, 1
+    font_size: '20sp'
+    canvas.after:
+        Color:
+            rgba: 1, 1, 1, 1
+        Line:
+            rectangle: self.x + 3, self.y + 3, self.width - 6, self.height - 6
+            width: 1.2
