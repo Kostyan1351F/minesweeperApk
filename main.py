@@ -276,32 +276,53 @@ class GameScreen(Screen):
                     background_down='',
                     background_color=(0.6, 0.6, 0.6, 1),
                 )
-                # on_release — самый надежный клик для Android
-                btn.bind(on_release=lambda inst, rr=r, cc=c: self.on_cell_click(rr, cc))
+                # Обработка касаний вниз и вверх
+                btn.bind(on_touch_down=lambda w, t, rr=r, cc=c: self.on_cell_touch_down(w, t, rr, cc))
+                btn.bind(on_touch_up=lambda w, t, rr=r, cc=c: self.on_cell_touch_up(w, t, rr, cc))
                 grid.add_widget(btn)
 
-    def toggle_flag_mode(self):
-        """Переключение режима (вызывается по нажатию на кнопку)"""
+    def on_flag_touch(self, widget, touch, *args):
+        """Обработка нажатия на кнопку режима (одним пальцем)"""
         if self.finished:
-            return
-
+            return False
+        if not widget.collide_point(*touch.pos):
+            return False
+            
+        # Переключаем режим
         self.flag_mode = not self.flag_mode
-
         if self.flag_mode:
-            self.ids.flag_toggle.text = "F РЕЖИМ ФЛАЖКОВ (ВКЛ)"
-            self.ids.flag_toggle.background_color = (0.8, 0.3, 0.1, 0.7)
+            widget.text = "F РЕЖИМ ФЛАЖКОВ (ВКЛ)"
+            widget.background_color = (0.8, 0.3, 0.1, 0.7)
         else:
-            self.ids.flag_toggle.text = "Режим: ОТКРЫТИЕ КЛЕТОК"
-            self.ids.flag_toggle.background_color = (0.05, 0.30, 0.30, 0.5)
+            widget.text = "Режим: ОТКРЫТИЕ КЛЕТОК"
+            widget.background_color = (0.05, 0.30, 0.30, 0.5)
+            
+        return True # Поглощаем событие
 
-    def on_cell_click(self, r, c):
+    def on_cell_touch_down(self, widget, touch, r, c):
         if self.finished:
-            return
+            return False
+        if not widget.collide_point(*touch.pos):
+            return False
+        touch.ud['cell_r'] = r
+        touch.ud['cell_c'] = c
+        return True
 
-        if self.flag_mode:
-            self.on_cell_right(r, c)
-        else:
-            self.on_cell_left(r, c)
+    def on_cell_touch_up(self, widget, touch, r, c):
+        if self.finished:
+            return False
+        if not widget.collide_point(*touch.pos):
+            return False
+        
+        if touch.ud.get('cell_r') == r and touch.ud.get('cell_c') == c:
+            if self.flag_mode:
+                self.on_cell_right(r, c)
+            else:
+                self.on_cell_left(r, c)
+            touch.ud['cell_r'] = None
+            touch.ud['cell_c'] = None
+            
+        return True
 
     def on_cell_left(self, r, c):
         if self.finished:
