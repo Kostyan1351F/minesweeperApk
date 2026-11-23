@@ -4,8 +4,7 @@ import random
 from datetime import datetime
 
 from kivy.config import Config
-# Если на телефоне остаются проблемы с нажатиями, попробуйте закомментировать строку ниже:
-Config.set('input', 'mouse', 'mouse,disable_multitouch')
+#Config.set('input', 'mouse', 'mouse,disable_multitouch')
 
 from kivy.app import App
 from kivy.clock import Clock
