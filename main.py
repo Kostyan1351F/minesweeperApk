@@ -12,6 +12,7 @@ from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.uix.button import Button
 from kivy.uix.label import Label
 from kivy.properties import StringProperty, NumericProperty
+from kivy.graphics import Color, Rectangle
 
 import sys
 import kivy.resources
@@ -242,7 +243,10 @@ class GameScreen(Screen):
         # Сброс кнопки режима
         if 'flag_toggle' in self.ids:
             self.ids.flag_toggle.text = "Режим: ОТКРЫТИЕ КЛЕТОК"
-            self.ids.flag_toggle.background_color = (0.05, 0.30, 0.30, 0.5)
+            self.ids.flag_toggle.canvas.before.clear()
+            with self.ids.flag_toggle.canvas.before:
+                Color(0.05, 0.30, 0.30, 0.5)
+                Rectangle(pos=self.ids.flag_toggle.pos, size=self.ids.flag_toggle.size)
 
         self._rebuild_grid()
         self._update_counters()
@@ -276,7 +280,6 @@ class GameScreen(Screen):
                     background_down='',
                     background_color=(0.6, 0.6, 0.6, 1),
                 )
-                # Обработка касаний вниз и вверх
                 btn.bind(on_touch_down=lambda w, t, rr=r, cc=c: self.on_cell_touch_down(w, t, rr, cc))
                 btn.bind(on_touch_up=lambda w, t, rr=r, cc=c: self.on_cell_touch_up(w, t, rr, cc))
                 grid.add_widget(btn)
@@ -288,22 +291,28 @@ class GameScreen(Screen):
         if not widget.collide_point(*touch.pos):
             return False
             
-        # Переключаем режим
         self.flag_mode = not self.flag_mode
         if self.flag_mode:
             widget.text = "F РЕЖИМ ФЛАЖКОВ (ВКЛ)"
-            widget.background_color = (0.8, 0.3, 0.1, 0.7)
+            widget.canvas.before.clear()
+            with widget.canvas.before:
+                Color(0.8, 0.3, 0.1, 0.7)
+                Rectangle(pos=widget.pos, size=widget.size)
         else:
             widget.text = "Режим: ОТКРЫТИЕ КЛЕТОК"
-            widget.background_color = (0.05, 0.30, 0.30, 0.5)
+            widget.canvas.before.clear()
+            with widget.canvas.before:
+                Color(0.05, 0.30, 0.30, 0.5)
+                Rectangle(pos=widget.pos, size=widget.size)
             
-        return True # Поглощаем событие
+        return True
 
     def on_cell_touch_down(self, widget, touch, r, c):
         if self.finished:
             return False
         if not widget.collide_point(*touch.pos):
             return False
+        
         touch.ud['cell_r'] = r
         touch.ud['cell_c'] = c
         return True
@@ -385,7 +394,10 @@ class GameScreen(Screen):
         self._refresh_cells()
         if 'flag_toggle' in self.ids:
             self.ids.flag_toggle.text = "Проигрыш! Нажмите 'Новая партия'"
-            self.ids.flag_toggle.background_color = (0.5, 0.0, 0.0, 0.7)
+            self.ids.flag_toggle.canvas.before.clear()
+            with self.ids.flag_toggle.canvas.before:
+                Color(0.5, 0.0, 0.0, 0.7)
+                Rectangle(pos=self.ids.flag_toggle.pos, size=self.ids.flag_toggle.size)
         save_record(self.difficulty, self.time_elapsed, "lose")
 
     def _win(self):
@@ -394,7 +406,10 @@ class GameScreen(Screen):
             self._timer.cancel()
         if 'flag_toggle' in self.ids:
             self.ids.flag_toggle.text = "Победа! Время: {} сек".format(self.time_elapsed)
-            self.ids.flag_toggle.background_color = (0.0, 0.5, 0.0, 0.7)
+            self.ids.flag_toggle.canvas.before.clear()
+            with self.ids.flag_toggle.canvas.before:
+                Color(0.0, 0.5, 0.0, 0.7)
+                Rectangle(pos=self.ids.flag_toggle.pos, size=self.ids.flag_toggle.size)
         save_record(self.difficulty, self.time_elapsed, "win")
 
     def restart(self):
