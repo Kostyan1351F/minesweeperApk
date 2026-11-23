@@ -105,19 +105,15 @@
                 text: "Время: 0 сек"
                 font_size: '20sp'
 
-        Label:
+        Button:
             id: flag_toggle
             text: "Режим: ОТКРЫТИЕ КЛЕТОК"
             font_size: '16sp'
             size_hint_y: None
             height: "40dp"
-            canvas.before:
-                Color:
-                    rgba: 0.05, 0.30, 0.30, 0.5
-                Rectangle:
-                    pos: self.pos
-                    size: self.size
-            on_touch_down: root.on_flag_touch(self, *args)
+            background_normal: ''
+            background_color: 0.05, 0.30, 0.30, 0.5
+            on_press: root.toggle_flag_mode()
 
         GridLayout:
             id: board_grid
